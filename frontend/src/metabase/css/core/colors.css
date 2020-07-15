@@ -2,19 +2,22 @@
  * NOTE: KEEP SYNCRONIZED WITH COLORS.JS
  */
 :root {
-  --color-brand: #509ee3;
-  --color-accent1: #88bf4d;
-  --color-accent2: #a989c5;
+  --color-brand: #1a80b6;
+  /*--color-brand: #509ee3;*/
+  --color-accent1: #a2bc53;
+  --color-accent2: #e64c66;
   --color-accent3: #ef8c8c;
   --color-accent4: #f9d45c;
   --color-accent5: #f2a86f;
   --color-accent6: #98d9d9;
   --color-accent7: #7172ad;
-  --color-admin-navbar: #7172ad;
+  --color-admin-navbar: #1a80b6;
   --color-white: #ffffff;
   --color-black: #2e353b;
-  --color-success: #84bb4c;
-  --color-error: #ed6e6e;
+  /*--color-success: #84bb4c;*/
+  --color-success: #a2bc53;
+  --color-error: #e64c66;
+  /*--color-error: #ed6e6e;*/
   --color-warning: #f9cf48;
   --color-text-dark: #2e353b;
   --color-text-medium: #74838f;
@@ -33,7 +36,7 @@
   --color-saturated-blue: #2d86d4;
   --color-saturated-green: #70a63a;
   --color-saturated-purple: #885ab1;
-  --color-saturated-red: #ed6e6e;
+  --color-saturated-red: #e64c66;
   --color-saturated-yellow: #f9cf48;
 
   /* night mode colors */

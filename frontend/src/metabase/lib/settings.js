@@ -19,6 +19,8 @@ export type SettingName =
   | "engines"
   | "ga-code"
   | "google-auth-client-id"
+  | "google-identity-api-key"
+  | "google-identity-login-url"
   | "has-sample-dataset?"
   | "hide-embed-branding?"
   | "ldap-configured?"
@@ -88,6 +90,10 @@ class Settings {
     return this.get("google-auth-client-id") != null;
   }
 
+  googleIdentityEnabled() {
+    return this.get("google-identity-login-url") != null;
+  }
+
   hasSetupToken() {
     return this.get("setup-token") != null;
   }
@@ -110,12 +116,12 @@ class Settings {
       tag = "latest";
     }
     if (page) {
-      page = `${page}.html`;
+      page = `/${page}.html`;
     }
     if (anchor) {
       anchor = `#${anchor}`;
     }
-    return `https://www.metabase.com/docs/${tag}/${page}${anchor}`;
+    return `https://metabase.com/docs/${tag}${page}${anchor}`;
   }
 
   newVersionAvailable() {

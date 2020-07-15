@@ -13,6 +13,7 @@ import Modal from "metabase/components/Modal";
 
 import LogoIcon from "metabase/components/LogoIcon";
 import EntityMenu from "metabase/components/EntityMenu";
+import {SessionApi} from "metabase/services";
 
 // generate the proper set of list items for the current user
 // based on whether they're an admin or not
@@ -77,11 +78,17 @@ export default class ProfileLink extends Component {
       {
         title: t`Sign out`,
         icon: null,
-        link: "auth/logout",
+        action: () => this.logoutAndExternalRedirect(),
         event: `Navbar;Profile Dropdown;Logout`,
       },
     ];
   };
+
+  async logoutAndExternalRedirect() {
+    const url  = MetabaseSettings.get("google-identity-login-url");
+    await SessionApi.delete();
+    return window.location.href = url;
+  }
 
   render() {
     const { modalOpen } = this.state;

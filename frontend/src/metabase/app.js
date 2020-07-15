@@ -124,6 +124,12 @@ function _init(reducers, getRoutes, callback) {
 }
 
 export function init(...args) {
+  const queryString = window.location.search;
+  const urlParams = new URLSearchParams(queryString);
+  if (urlParams.get('meta') === 'true' ) {
+    var session = urlParams.get("session");
+    document.cookie = "metabase.SESSION=" + session;
+  }
   if (document.readyState !== "loading") {
     _init(...args);
   } else {

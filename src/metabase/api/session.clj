@@ -4,7 +4,7 @@
             [cheshire.core :as json]
             [clj-http.client :as http]
             [clojure.tools.logging :as log]
-            [compojure.core :refer [DELETE GET POST]]
+            [compojure.core :refer [DELETE GET POST OPTIONS]]
             [metabase
              [config :as config]
              [events :as events]
@@ -151,6 +151,12 @@
                                    (login-throttlers :username)   username]
           (do-login username password request))))))
 
+(api/defendpoint OPTIONS "/"
+  "Login."
+  [:as {{:keys [username password]} :body, :as request}]
+  api/generic-200-success
+  )
+
 
 (api/defendpoint DELETE "/"
   "Logout."
@@ -295,7 +301,7 @@
     ;; Use some wacky status code (428 - Precondition Required) so we will know when to so the error screen specific
     ;; to this situation
     (throw
-     (ex-info (tru "You''ll need an administrator to create a Metabase account before you can use Google to log in.")
+     (ex-info (tru "You''ll need an administrator to create a NebulaData account before you can log in.")
        {:status-code 428}))))
 
 (s/defn ^:private google-auth-create-new-user!
@@ -335,5 +341,57 @@
       (throttle/with-throttling [(login-throttlers :ip-address) (source-address request)]
         (do-google-auth request)))))
 
+
+(defsetting google-identity-login-url
+            (deferred-tru "When set, this will be used to redirect a user to an external login page (on logout)."))
+
+(defsetting google-identity-api-key
+            (deferred-tru "Used to validate the user when a login request is received from google identity (an external login page)."))
+
+(def ^:private google-identity-token-info-url "https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=%s")
+
+(defn- google-identity-token-info
+  [token-info-response]
+  (let [body (:body token-info-response)
+        jsonObj (json/parse-string body)
+        jsonObjKeyWords (clojure.walk/keywordize-keys jsonObj)
+        user (first (:users jsonObjKeyWords))]
+    user))
+
+(s/defn ^:private google-identity-fetch-or-create-user! :- (s/maybe UUID)
+  [display-name email]
+  (let [name-parts (clojure.string/split display-name #" ")
+        first-name (first name-parts)
+        last-name (clojure.string/join " " (rest name-parts))]
+    (when-let [user (or (db/select-one [User :id :last_login] :email email)
+                        (google-auth-create-new-user! {:first_name first-name
+                                                       :last_name  last-name
+                                                       :email      email}))]
+      (create-session! :sso user))))
+
+(defn- do-google-identity [{{:keys [token]} :body :as request}]
+  (let [token-info-response                    (http/post (format google-identity-token-info-url  (google-identity-api-key)) {:body (json/generate-string {:idToken token}) })
+        {:keys [displayName email]} (google-identity-token-info token-info-response)]
+    (log/info (trs "Successfully authenticated Google Auth token for: {0} {1}" displayName email))
+    (let [session-id (api/check-500 (google-identity-fetch-or-create-user! displayName email))
+          response   {:id session-id}]
+      (mw.session/set-session-cookie request response session-id))))
+
+(api/defendpoint POST "/google_identity"
+  "Login with Google Identity."
+  [:as {{:keys [token]} :body, :as request}]
+  {token su/NonBlankString}
+  ;; Verify the token is valid with Google
+  (if throttling-disabled?
+    (do-google-identity token)
+    (http-400-on-error
+      (throttle/with-throttling [(login-throttlers :ip-address) (source-address request)]
+        (do-google-identity request)))))
+
+  (api/defendpoint OPTIONS "/google_identity"
+    "Login with Google Identity."
+    [:as {{:keys []} :body, :as request}]
+    api/generic-200-success
+    )
 
 (api/define-routes)

@@ -219,6 +219,10 @@
   "A 'No Content' response for `DELETE` endpoints to return."
   {:status 204, :body nil})
 
+  (def generic-200-success
+  "A 'success' response for `OPTIONS` endpoints to allow cors."
+  {:status 200, :body "{}"})
+
 
 ;;; --------------------------------------- DEFENDPOINT AND RELATED FUNCTIONS ----------------------------------------
 
